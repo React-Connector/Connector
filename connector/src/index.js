@@ -4,17 +4,16 @@ import Connector from './Mu/Connector';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-// let questionStorage = window.localStorage.getItem('questionStorage');
+let questionStorage = window.localStorage.getItem('questionStorage');
 
-// if(!questionStorage){
-//   questionStorage = [];
-// }else{
-//   questionStorage = JSON.parse(questionStorage);
-// }
+if(!questionStorage){
+  questionStorage = [];
+}else{
+  questionStorage = JSON.parse(questionStorage);
+}
 
 root.render(
   <React.StrictMode>
-    <Connector />
-    {/* <Connector questionStorage={questionStorage}/> */}
+  <Connector questionStorage={questionStorage}/>
   </React.StrictMode>
 );
