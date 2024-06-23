@@ -23,9 +23,16 @@ function TitleDialog(props){
             <button onClick={updateHandler}>수정</button>
             <button onClick={deleteHandler}>삭제</button>
             <hr />
-            <CommentList />
-
-            </dialog>
+            
+            <input placeholder="답변을 입력해주세요." />
+            
+            <button>입력</button>
+            <hr />
+            <ol>
+                <li>답변1</li>
+            </ol>
+      
+        </dialog>
     )
 }
 
