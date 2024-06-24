@@ -1,19 +1,22 @@
 import React from "react";
-import Sort from "./Sort";
 
 
 class Question {
-    constructor(title, code, text) {
+    constructor(title, code, text,commArray,commentNum) {
         this.title = title;
         this.code = code;
         this.text = text;
         this.datetime = '';
+        this.timer = 0;
         this.setDatetime();
+        this.commArray = commArray;
+        this.commentNum = commentNum;
     }
 
     setDatetime() {
         const currDate = new Date();
         this.datetime += `${currDate.getFullYear()}-${currDate.getMonth()}-${currDate.getDate()} `;
+        this.timer = currDate.getTime();
     }
 }
 
@@ -33,7 +36,7 @@ class Comment {
 
 
 let num = 0;
-let commentNum = [];
+
 function Connector(props) {
     const [questionArray, setQuestionArray] = React.useState(props.questionStorage);
     const [commentArray, setCommentArray] = React.useState(props.commentStorage);
@@ -45,9 +48,8 @@ function Connector(props) {
 
     const [commentCode, setCommentCode] =  React.useState('');
     let [commentText, setCommentText] = React.useState('');
-
+    const [sortValue, setSortValue] = React.useState('recent');
     const writeDialogElem = React.useRef('');
-
 
 
 
@@ -81,10 +83,14 @@ function Connector(props) {
         }else{
             commentArray.push(new Comment(commentCode, commentText, event.target.name, Comment));
             setCommentArray(commentArray);
+            window.localStorage.setItem('commentStorage', JSON.stringify(commentArray));
+            questionArray[event.target.name] = new Question(questionArray[event.target.name].title, questionArray[event.target.name].code, questionArray[event.target.name].text, commentArray.filter(v=>v.index===event.target.name.toString()),commentArray.filter(v=>v.index===event.target.name.toString()).length,Question)
+            setQuestionArray(questionArray);
+            window.localStorage.setItem('questionStorage', JSON.stringify(questionArray));
             setCommentCode('');
             setCommentText('');
-            window.localStorage.setItem('commentStorage', JSON.stringify(commentArray));
-            setWrite(write + 1);
+            
+            
         }
     }
 
@@ -110,7 +116,48 @@ function Connector(props) {
         }
     }
 
-   
+
+    const sortArray = (event) => {
+        setSortValue(event.target.value);
+        if(event.target.value === 'last'){
+        questionArray.sort((a,b)=> a.timer-b.timer);
+        setQuestionArray(questionArray);
+        }else if(event.target.value === 'recent'){
+        questionArray.sort((a,b)=> b.timer-a.timer);
+        setQuestionArray(questionArray);
+        }else{
+        questionArray.sort((a,b)=>b.commentNum-a.commentNum);
+        setQuestionArray(questionArray);
+        }
+    }
+
+   const ago = (time) => {
+    let diff = new Date().getTime() - time;
+    let diffSeconds = Math.floor(diff/1000);
+    let diffMinutes = Math.floor(diff/60000);
+    let diffHours = Math.floor(diff/3600000);
+    let diffDays = Math.floor(diff/86400000);
+    let diffMonths = Math.floor(diff/2592000000);
+    let diffYears = Math.floor(diff/31104000000);
+
+    if(diffYears > 0){
+        return diffYears + '년 전';
+    }else if(diffMonths > 0){
+        return diffMonths + '개월 전';
+    }else if(diffDays > 0){
+        return diffDays + '일 전';
+    }else if(diffHours > 0){
+        return diffHours + '시간 전';
+    }else if(diffMinutes > 0){
+        return diffMinutes + '분 전';
+    }else if(diffSeconds > 10){
+        return diffSeconds + '초 전';
+    }else{
+        return '방금';
+    }
+ 
+
+   }
 
     return (
 
@@ -152,13 +199,18 @@ function Connector(props) {
 
             <fieldset>
                 <legend>게시판</legend>
-                <Sort />
+                
+                <select onChange={sortArray}>
+                <option value='recent'>최신 순</option>
+                <option value='last'>오래된 순</option>
+                <option value='comment'>댓글 순</option>
+                </select>
 
                 <ol>
                     {questionArray.map((question, index) => {
                         return (
                             <>
-                                <li key={index}><span onMouseOver={(event) => event.target.style.color = 'red'} onMouseOut={(event) => event.target.style.color = 'black'} onClick={() => isUpdate ? alert('현재 글을 수정 중 입니다.') : window.document.querySelector(`#dialog${index}`).open = 'open'}>{question.title}</span> | {question.datetime} <span>comments : {commentNum[index]}</span></li>
+                                <li key={index}><span onMouseOver={(event) => event.target.style.color = 'red'} onMouseOut={(event) => event.target.style.color = 'black'} onClick={() => isUpdate ? alert('현재 글을 수정 중 입니다.') : window.document.querySelector(`#dialog${index}`).open = 'open'}>{question.title}</span> | {ago(question.timer)} <span>comments : {question.commentNum ? question.commentNum : 0}</span></li>
 
                                 <dialog open='' id={'dialog' + index}>
                                     <p> {question.title} | {question.datetime}  <span><button onClick={() => window.document.querySelector(`#dialog${index}`).open = ''}>X</button></span></p>
@@ -182,16 +234,17 @@ function Connector(props) {
                                     <button onClick={commentHandler} name={index}>입력</button>
                                     
                                     <hr />
-                                    {commentNum[index]=commentArray.filter(v=>v.index===index.toString()).length}
-                                    <ol>
-                                        {commentArray.filter(v=>v.index===index.toString()).map((comment) => {
+                                    <span>comments : {question.commentNum ? question.commentNum : 0}</span>
+                                    {questionArray[index].commentNum > 0 ? <ol>
+                                        {questionArray[index].commArray.map((comment) => {
                                             return(
                                             <li><filedset>{comment.code} | {comment.datetime}</filedset><br /><p>{comment.text}</p></li>
                                             )
                                         
                                         })}
                                         
-                                    </ol>
+                                    </ol>: <></>}
+                                    
 
                                 </dialog>
 
