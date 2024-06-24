@@ -68,6 +68,7 @@ function Connector(props) {
                 questionArray.push(new Question(titleElem, codeElem, textElem, Question));
                 writeDialogElem.current.open = '';
                 setIsWrite(false);
+                setHot([...questionArray].sort((a,b)=>b.commentNum-a.commentNum));
             }
 
             setQuestionArray(questionArray);
