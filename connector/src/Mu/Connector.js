@@ -45,13 +45,13 @@ function Connector(props) {
     const [titleElem, setTitleElem] = React.useState('');
     const [codeElem, setCodeElem] = React.useState('');
     const [textElem, setTextElem] = React.useState('');
-
+    const [isWrite, setIsWrite] = React.useState(false);
     const [commentCode, setCommentCode] =  React.useState('');
     let [commentText, setCommentText] = React.useState('');
     const [sortValue, setSortValue] = React.useState('recent');
     const writeDialogElem = React.useRef('');
 
-
+    const [hot, setHot] = React.useState([...questionArray].sort((a,b)=>b.commentNum-a.commentNum));
 
 
 
@@ -67,6 +67,7 @@ function Connector(props) {
             } else {
                 questionArray.push(new Question(titleElem, codeElem, textElem, Question));
                 writeDialogElem.current.open = '';
+                setIsWrite(false);
             }
 
             setQuestionArray(questionArray);
@@ -89,7 +90,7 @@ function Connector(props) {
             window.localStorage.setItem('questionStorage', JSON.stringify(questionArray));
             setCommentCode('');
             setCommentText('');
-            
+            setHot([...questionArray].sort((a,b)=>b.commentNum-a.commentNum));
             
         }
     }
@@ -171,11 +172,15 @@ function Connector(props) {
             <button onClick={() => {
                 if (isUpdate) {
                     alert('현재 글을 수정 중 입니다.');
-                } else {
+                }else if(isWrite){
+                    alert('현재 글을 작성 중 입니다.');
+                } 
+                else {
                     writeDialogElem.current.open = 'open';
                     setTitleElem('');
                     setCodeElem('');
                     setTextElem('');
+                    setIsWrite(true);
                 }
             }
             }>글쓰기</button>
@@ -191,7 +196,7 @@ function Connector(props) {
                 <hr />
                 {isUpdate ? <button onClick={submitHandler}>수정</button> : <button onClick={submitHandler}>작성</button>}
                 {isUpdate ? <button onClick={() => { writeDialogElem.current.open = ''; setIsUpdate(false) }}>취소</button> 
-                          : <button onClick={() => { writeDialogElem.current.open = '' }}>취소</button>}
+                          : <button onClick={() => { writeDialogElem.current.open = ''; setIsWrite(false)}}>취소</button>}
             </dialog>
 
 
@@ -199,18 +204,56 @@ function Connector(props) {
 
             <fieldset>
                 <legend>게시판</legend>
+                <h4>Hot</h4>
+                <ol>
+                {hot.map((question, index) => {
+                    if(index < 2){
+                        return (
+                            <>
+                             <li><span onMouseOver={(event) => event.target.style.color = 'red'} onMouseOut={(event) => event.target.style.color = 'black'} onClick={() => isUpdate ? alert('현재 글을 수정 중 입니다.') : isWrite ? alert('현재 글을 작성 중 입니다.') : window.document.querySelector(`#hotDialog${index}`).open = 'open'}>{question.title}</span> | {ago(question.timer)} <span>comments : {question.commentNum ? question.commentNum : 0}</span></li>
+                            
+                             <dialog open='' id={'hotDialog' + index}>
+                             <p> {question.title} | {question.datetime}  <span><button onClick={() => window.document.querySelector(`#hotDialog${index}`).open = ''}>X</button></span></p>
+                                    <hr />
+
+                                    <div>
+                                        <fieldset>{question.code}</fieldset>
+                                        <p>{question.text}</p>
+                                    </div>
+                                    
+                                    <hr />
+                                    <span>comments : {question.commentNum ? question.commentNum : 0}</span>
+                                    {hot[index].commentNum > 0 ? <ol>
+                                        {hot[index].commArray.map((comment) => {
+                                            return(
+                                            <li><filedset>{comment.code} | {comment.datetime}</filedset><br /><p>{comment.text}</p></li>
+                                            )
+                                        
+                                        })}
+                                        
+                                    </ol>: <></>}
+
+                             </dialog>
+                            </>
+                        )
+                    }
+                })}
+
+                </ol>
                 
+                <hr/>
                 <select onChange={sortArray}>
                 <option value='recent'>최신 순</option>
                 <option value='last'>오래된 순</option>
                 <option value='comment'>댓글 순</option>
                 </select>
 
+
                 <ol>
                     {questionArray.map((question, index) => {
                         return (
                             <>
-                                <li key={index}><span onMouseOver={(event) => event.target.style.color = 'red'} onMouseOut={(event) => event.target.style.color = 'black'} onClick={() => isUpdate ? alert('현재 글을 수정 중 입니다.') : window.document.querySelector(`#dialog${index}`).open = 'open'}>{question.title}</span> | {ago(question.timer)} <span>comments : {question.commentNum ? question.commentNum : 0}</span></li>
+                                <li key={index}><span onMouseOver={(event) => event.target.style.color = 'red'} onMouseOut={(event) => event.target.style.color = 'black'} onClick={() => isUpdate ? alert('현재 글을 수정 중 입니다.') : isWrite ? alert('현재 글을 작성 중 입니다.') : window.document.querySelector(`#dialog${index}`).open = 'open'}>{question.title}</span> | {ago(question.timer)} <span>comments : {question.commentNum ? question.commentNum : 0}</span></li>
 
                                 <dialog open='' id={'dialog' + index}>
                                     <p> {question.title} | {question.datetime}  <span><button onClick={() => window.document.querySelector(`#dialog${index}`).open = ''}>X</button></span></p>
